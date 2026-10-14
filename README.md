@@ -15,6 +15,5 @@
 <!--
   The card is rendered by scripts/build_card.py and refreshed every day by
   .github/workflows/profile.yml, which also draws the snake (Platane/snk).
-  Edit the card's text in info_lines() in scripts/build_card.py.
-  Layout inspired by Andrew6rant/Andrew6rant.
+  Edit the code on the card in code_lines() in scripts/build_card.py.
 -->
