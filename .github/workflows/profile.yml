@@ -1,0 +1,66 @@
+name: Update profile
+
+on:
+  schedule:
+    - cron: "0 17 * * *" # 00:00 WIB
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/build_card.py"
+      - "assets/ascii_*.txt"
+      - ".github/workflows/profile.yml"
+
+concurrency:
+  group: profile
+  cancel-in-progress: false
+
+jobs:
+  card:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Render the profile card
+        run: python3 scripts/build_card.py
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Commit the card if it changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/dark_mode.svg assets/light_mode.svg
+          if git diff --cached --quiet; then
+            echo "Card unchanged"
+          else
+            git commit -m "chore: update profile card"
+            git push
+          fi
+
+  snake:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - name: Draw the contribution snake
+        uses: Platane/snk/svg-only@v3
+        with:
+          github_user_name: ${{ github.repository_owner }}
+          # Gold to match the card: 5 dot colours run from "no contributions" to "most".
+          outputs: |
+            dist/snake.svg?palette=github-light&color_snake=#8a5a00&color_dots=#ebedf0,#f2e2b3,#e0c06a,#c29a2e,#8a6416
+            dist/snake-dark.svg?palette=github-dark&color_snake=#fff1c1&color_dots=#161b22,#4a3b17,#7a5f1f,#b8902c,#f5d77a
+
+      - name: Publish it to the output branch
+        uses: crazy-max/ghaction-github-pages@v5
+        with:
+          target_branch: output
+          build_dir: dist
+          commit_message: "chore: update contribution snake"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
